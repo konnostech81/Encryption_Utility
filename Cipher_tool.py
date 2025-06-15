@@ -2,7 +2,7 @@ import sys
 import random
 from math import gcd
 
-# Supported alphabets
+''' Supported alphabets '''
 ENGLISH_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 GREEK_ALPHABET = 'ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ'
 
@@ -14,7 +14,8 @@ def get_alphabet(choice):
     else:
         return None
 
-# Encryption algorithms
+''' Encryption algorithms '''
+'''Caesar Cipher Algorithm'''
 def caesar_cipher(text, key, alphabet):
     result = ''
     n = len(alphabet)
@@ -32,6 +33,7 @@ def caesar_cipher(text, key, alphabet):
             result += char
     return result
 
+'''Vigenere Cipher Algorithm'''
 def vigenere_cipher(text, key, alphabet):
     result = ''
     n = len(alphabet)
@@ -56,6 +58,7 @@ def vigenere_cipher(text, key, alphabet):
             result += char
     return result
 
+'''Affine Cipher Algorithm'''
 def affine_cipher(text, keya, keyb, alphabet):
     n = len(alphabet)
     a = int(keya)
@@ -75,6 +78,7 @@ def affine_cipher(text, keya, keyb, alphabet):
         for char in text
     ])
 
+'''OTP Cipher Algorithm'''
 def otp_cipher(text, key, alphabet):
     result = ''
     n = len(alphabet)
@@ -192,13 +196,9 @@ def main():
                     else:
                         print("❌  Something went wrong generating the key!")
                 if all(k.upper() in alphabet for k in key if k.isalpha()):
-                    letters_in_text = [c for c in text if c.isalpha()]
-                    if len(key) >= len(letters_in_text):
-                        break
-                    else:
-                        print("\n⚠️  Key must be the same size as the text or longer!\n")
+                    break
                 else:
-                    print("\n⚠️  Key must only contain letters from the chosen alphabet!\n")
+                    print("❌  Something went wrong generating the key!")
             ciphered = otp_cipher(text, key, alphabet)
             if ciphered is None:
                 print("\n⚠️  Invalid key for Verman/OTP cipher!\n")
