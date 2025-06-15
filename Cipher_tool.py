@@ -49,19 +49,60 @@ def vigenere_cipher(text, key, alphabet):
             result += char
     return result
 
-def get_input(prompt, valid_options=None):
+def affine_cipher(text, keya, keyb, alphabet):
+    n = len(alphabet)
+    a = int(keya)
+    b = int(keyb)
+    if not a or not b:
+        return None
+    '''
+    C = (a*P + b) % 26
+    '''
+    return ''.join([
+        alphabet[
+            ((a * alphabet.index(char.upper()) + b) % n)].lower() if char.islower() 
+            else alphabet[((a * alphabet.index(char.upper()) + b) % n)]
+        if char.upper() in alphabet else char
+        for char in text
+    ])
+
+def otp_cipher(text, key, alphabet):
+    result = ''
+    n = len(alphabet)
+    key_indices = [alphabet.index(k.upper()) for k in key if k.upper() in alphabet]
+    if not key_indices:
+        return None
+    j = 0
+    for char in text:
+        if char.upper() in alphabet:
+            idx = alphabet.index(char.upper())
+            shift = key_indices[j]
+            new_idx = (idx + shift) % n
+            new_char = alphabet[new_idx]
+            if char.islower():
+                new_char = new_char.lower()
+            result += new_char
+            j += 1
+        else:
+            result += char
+    return result
+
+def get_input(prompt, valid_options=None, program_end=False):
     while True:
         value = input(prompt)
         if valid_options:
             if value.lower() in valid_options:
                 return value
             else:
-                print(f"Please choose from {valid_options}.")
+                print(f"\n⚠️  Please choose from {valid_options}!\n")
         else:
             if value.strip():
                 return value
             else:
-                print("Input cannot be empty.")
+                if not program_end:
+                    print("\n⚠️  Input cannot be empty!\n")
+                else:
+                    return
 
 def main():
     while True:
@@ -69,23 +110,28 @@ def main():
         alphabet_choice = get_input("Choose alphabet (type '1' for english or '2' for greek): ", ['1', '2'])
         alphabet = get_alphabet(alphabet_choice)
         if not alphabet:
-            print("Invalid alphabet choice.")
+            print("\n⚠️  Invalid alphabet choice!\n")
             continue
         
         while True:
             text = get_input("Enter the text to cipher: ")
             if text.isnumeric():
-                print("Input cannot be only numbers.")
+                print("\n⚠️  Input cannot be only numbers!\n")
                 continue
             # Check if all letters in text are in the chosen alphabet (ignore non-letters)
             letters_in_text = [c for c in text if c.isalpha()]
             if all(c.upper() in alphabet for c in letters_in_text):
                 break
             else:
-                print(f"Text must only contain letters from the chosen alphabet ({alphabet_choice}).")
+                print(f"\n⚠️  Text must only contain letters from the chosen alphabet ({alphabet_choice})!\n")
         
         print("~ Available Algorithms ~")
-        algo = get_input("1. Caesar\n2. Vigenere\nChoose an algorithm from the above (type the name or it's number): ", ['caesar', 'vigenere', '1', '2'])
+        print("\n1. Caesar: Shifts each letter by a fixed number of positions in the alphabet.\nKey is a single integer.")
+        print("2. Vigenere: Shifts each letter by a value based on a repeating keyword.\nKey is a word using only letters from the chosen alphabet.")
+        print("3. Affine: Applies a mathematical transformation to each letter using two keys (a, b).\nKeys are words using only letters from the chosen alphabet.")
+        print("4. Vernam/OTP: Each letter is shifted by a value based on a one-time pad key of the same length as the text.\nKey must be the same length as the text and use only letters from the chosen alphabet.\n")
+
+        algo = get_input("Choose an algorithm from the above (type the name or it's number): ", ['caesar', 'vigenere', 'affine', 'verman', 'otp', 'verman/otp' '1', '2', '3', '4'])
 
         if algo == 'caesar' or algo == '1':
             while True:
@@ -94,25 +140,51 @@ def main():
                     key = int(key_input)
                     break
                 else:
-                    print("Invalid key.")
+                    print("\n⚠️  Invalid key!\n")
             ciphered = caesar_cipher(text, key, alphabet)
         elif algo == 'vigenere' or algo == '2':
             while True:
-                key = get_input(f"Enter key (word using {alphabet_choice} letters): ")
+                key = get_input(f"Enter key (word using {'[English]' if alphabet_choice == '1' else '[Greek]'} letters): ")
                 if all(k.upper() in alphabet for k in key):
                     break
                 else:
-                    print("Key must only contain letters from the chosen alphabet.")
+                    print("\n⚠️  Key must only contain letters from the chosen alphabet!\n")
             ciphered = vigenere_cipher(text, key, alphabet)
             if ciphered is None:
-                print("Invalid key for Vigenere cipher.")
+                print("\n⚠️  Invalid key for Vigenere cipher!\n")
+                continue
+        elif algo == 'affine' or algo == '3':
+            while True:
+                keya = get_input(f"Enter key 'a' (a number) ")
+                keyb = get_input(f"And enter key 'b' (a number): ")
+                if keya.isnumeric() and keyb.isnumeric():
+                    break
+                else:
+                    print("\n⚠️  Keys must only contain a number!\n")
+            ciphered = affine_cipher(text, keya, keyb, alphabet)
+            if ciphered is None:
+                print("\n⚠️  Invalid key for Affine cipher!\n")
+                continue
+        elif algo == '4' or algo == 'otp' or algo == 'verman' or algo == 'verman/otp':
+            while True:
+                key = get_input(f"Enter key (word using {'[English]' if alphabet_choice == '1' else '[Greek]'} letters): ")
+                if all(k.upper() in alphabet for k in key):
+                    if len(key) >= len(text):
+                        break
+                    else:
+                        print("\n⚠️  Key must be the same size as the text or longer!\n")
+                else:
+                    print("\n⚠️  Key must only contain letters from the chosen alphabet!\n")
+            ciphered = otp_cipher(text, key, alphabet)
+            if ciphered is None:
+                print("\n⚠️  Invalid key for Verman/OTP cipher!\n")
                 continue
 
         print(f"\nCiphered text: {ciphered}")
 
-        next_action = get_input("Type 'exit' to quit or 'continue' to start again: ", ['exit', 'continue'])
-        if next_action == 'exit':
-            print("Exiting program.")
+        next_action = get_input("➡️  Type 'exit' to quit or press any key to start again: ", None, True)
+        if next_action == 'exit' or next_action == 'EXIT':
+            print("Exiting program...")
             sys.exit()
 
 if __name__ == "__main__":
